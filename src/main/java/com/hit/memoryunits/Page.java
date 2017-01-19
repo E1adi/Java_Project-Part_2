@@ -2,12 +2,14 @@ package com.hit.memoryunits;
 
 public class Page<T> implements java.io.Serializable {
 
-	T _content;
-	java.lang.Long _id;
+	private T _content;
+	private java.lang.Long _id;
 	
 	
 	public Page(java.lang.Long id,
             T content) {
+		_id = id;
+		_content = content;
 	}
 	
 	public java.lang.Long getPageId() {
@@ -28,18 +30,22 @@ public class Page<T> implements java.io.Serializable {
 	}
 	
 	public int hashCode() {
-		return 0;
-		
+		int result = 17;
+		result = result * (_id.intValue() % Integer.MAX_VALUE);
+		return result;
 	}
 	
 	public boolean equals(java.lang.Object obj) {
+		if(obj == this) {
+			return true;
+		}
 		if(obj instanceof Page<?>) {
-			return _id == ((Page<T>)obj).getPageId();
+			return _id == ((Page<?>)obj).getPageId();
 		}
 		return false;
 	}
 	
 	public java.lang.String toString() {
-		return String.format("Page ID: {0}, Content: {1}" , _id, _content);
+		return String.format("Page ID: %s, Content: %s" , _id, _content);
 	}
 }
