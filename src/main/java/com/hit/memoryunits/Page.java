@@ -1,5 +1,7 @@
 package com.hit.memoryunits;
 
+import java.util.Arrays;
+
 public class Page<T> implements java.io.Serializable {
 
 	private T _content;
@@ -31,7 +33,7 @@ public class Page<T> implements java.io.Serializable {
 	
 	public int hashCode() {
 		int result = 17;
-		result = result * (_id.intValue() % Integer.MAX_VALUE);
+		result = (result * _id.intValue()) % Integer.MAX_VALUE;
 		return result;
 	}
 	
