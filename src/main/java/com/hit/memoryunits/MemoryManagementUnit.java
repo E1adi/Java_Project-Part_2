@@ -35,40 +35,66 @@ public class MemoryManagementUnit {
 //		returns array of pages that are requested from the user
 //	Throws:
 //		java.io.IOException
+//		ClassNotFoundException
+	@SuppressWarnings("unchecked")
 	public Page<byte[]>[] getPages(java.lang.Long[] pageIds)
             throws java.io.IOException, ClassNotFoundException {
-		List<Long> requestedPages = Arrays.asList(pageIds);
-		Page<byte[]> page = null;
-		List<Page<byte[]>> pageToReturn = new ArrayList<Page<byte[]>>();
+		Long currentPresentPageID, currentRequestedPageID;
+		Long currentMissingPageID, currentKeyToReplace; 
+		Page<byte[]> pageToRam;
 		HardDisk hd = HardDisk.getInstance();
-		List<Long> presentPagesInMemory, missingPagesInMemory = Arrays.asList(pageIds);
-		List<Long> keyToRemove;
+		List<Long> requestedPages = Arrays.asList(pageIds);
+		List<Long> presentPagesInMemory, keysToReplace = null;
+		List<Long> missingPagesInMemory = new ArrayList<Long>();	
+		List<Page<byte[]>> pagesToReturn = new ArrayList<Page<byte[]>>();
 		
 		presentPagesInMemory = _algo.getElement(Arrays.asList(pageIds));
 		if((presentPagesInMemory != null)) {
 			Iterator<Long> presentPagesIterator = presentPagesInMemory.iterator();
 			Iterator<Long> requestedPagesIterator = requestedPages.iterator();
 			while(presentPagesIterator.hasNext() && requestedPagesIterator.hasNext()) {
-				
-			}
-		}
-		for(Long id: pageIds) {
-			if((page = _RAM.getPage(id)) != null) {
-				idList.clear();
-				idList.add(id);
-				_algo.getElement(idList);
-				pageToReturn.add(page);
-			}
-			else {
-				if(_RAM.getCurrentSize() < _RAM.getInitialCapacity()) {
-					_RAM.addPage(hd.pageFault(id));
-					pageToReturn.add(_RAM.getPage(id));
+				currentPresentPageID = presentPagesIterator.next();
+				currentRequestedPageID = requestedPagesIterator.next();
+				if(currentPresentPageID == null) {
+					missingPagesInMemory.add(currentRequestedPageID);
 				}
 				else {
-					
+					pagesToReturn.add(_RAM.getPage(currentPresentPageID));
 				}
 			}
 		}
-		return null;
+		else {
+			missingPagesInMemory.addAll(Arrays.asList(pageIds));
+		}
+		if(missingPagesInMemory.size() > 0) {
+			keysToReplace = _algo.putElement(missingPagesInMemory, missingPagesInMemory);
+			if(keysToReplace != null) {
+				Iterator<Long> missingPagesIterator = missingPagesInMemory.iterator();
+				Iterator<Long> keysToReplaceIterator = keysToReplace.iterator();
+				while(missingPagesIterator.hasNext() && keysToReplaceIterator.hasNext()) {
+					currentMissingPageID = missingPagesIterator.next();
+					currentKeyToReplace = keysToReplaceIterator.next();
+					if(currentKeyToReplace != null) {
+						pageToRam = hd.pageReplacement(_RAM.getPage(currentKeyToReplace), currentMissingPageID);
+						_RAM.removePage(_RAM.getPage(currentKeyToReplace));
+						_RAM.addPage(pageToRam);
+						pagesToReturn.add(pageToRam);
+					}
+					else {
+						pageToRam = hd.pageFault(currentMissingPageID);
+						_RAM.addPage(pageToRam);
+						pagesToReturn.add(pageToRam);
+					}
+				}
+			}
+			else {
+				for(Long pageId: missingPagesInMemory) {
+					pageToRam = hd.pageFault(pageId);
+					_RAM.addPage(pageToRam);
+					pagesToReturn.add(pageToRam);
+				}
+			}
+		} 
+		return (Page<byte[]>[]) pagesToReturn.toArray(new Page[1]);
 	}
 }

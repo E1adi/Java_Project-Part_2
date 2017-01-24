@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.hit.constants.*;
+
 
 public class RAM {
 	
@@ -40,14 +40,17 @@ public class RAM {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	public Page<byte[]>[] getPages(java.lang.Long[] pageIds) {
 		List<Page<byte[]>> returnValues = new ArrayList<Page<byte[]>>();
 		for(Long id: pageIds) {
-			if(_memory.containsKey(id)) {
-				returnValues.add(_memory.get(id));
+			if(id != null) {
+				if(_memory.containsKey(id)) {
+					returnValues.add(_memory.get(id));
+				}
 			}
 		}
-		return returnValues.toArray(null);
+		return (Page<byte[]>[]) returnValues.toArray();
 	}
 	
 	public void addPage(Page<byte[]> addPage) {
@@ -77,6 +80,9 @@ public class RAM {
 	
 	public void setInitialCapacity(int initialCapacity) {
 		_capacity = initialCapacity;
+		Map<Long, Page<byte[]>> temp = this.getPages();
+		_memory = new HashMap<Long, Page<byte[]>>(_capacity);
+		_memory.putAll(temp);
 	}
 	
 	public int getInitialCapacity() {
